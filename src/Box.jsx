@@ -1,19 +1,29 @@
-import { useRef, } from "react";
-import { useFrame } from "@react-three/fiber";
-
+import { useRef, useState, useEffect, useMemo } from 'react';
+import { useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
 
 export default function Box(props) {
-  const ref = useRef()
+  const ref = useRef();
+  const [rotate, setRotate] = useState(false);
+  const geometry = useMemo(() => new THREE.BoxGeometry(), []);
 
-  useFrame((state, delta) => {
-    ref.current.rotation.x += 1 * delta
-    ref.current.rotation.y += 0.5 * delta
-    ref.current.position.y = Math.sin(state.clock.getElapsedTime())
-  })
+  useEffect(() => {
+    console.log(ref.current.geometry.uuid);
+  });
+
+  useFrame((_, delta) => {
+    ref.current.rotation.x += delta * rotate;
+    ref.current.rotation.y += 0.5 * delta * rotate;
+  });
+
   return (
-    <mesh {...props} ref={ref} >
+    <mesh
+      {...props}
+      geometry={geometry}
+      ref={ref}
+      onPointerDown={() => setRotate(!rotate)}>
       <boxGeometry />
-      <meshBasicMaterial color={0x00ff00} wireframe />
+      <meshBasicMaterial color={'lime'} wireframe />
     </mesh>
   );
 }
