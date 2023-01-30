@@ -1,68 +1,28 @@
-import { useState } from 'react';
-import { Canvas } from '@react-three/fiber';
-import {
-  useGLTF,
-  OrbitControls,
-  Environment,
-  Stats,
-  Html,
-} from '@react-three/drei';
-import { useControls } from 'leva';
-import Models from './models';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
+import { Center, Environment } from '@react-three/drei';
+import { Vector3 } from 'three';
+import Button from './Button';
 
-
-function Model({ url }) {
-  const { scene } = useGLTF(url);
-  const [cache, setCache] = useState({});
-
-  if (!cache[url]) {
-    const annotations = [];
-
-    scene.traverse((o) => {
-      if (o.userData.prop) {
-        annotations.push(
-          <Html
-            key={o.uuid}
-            position={[o.position.x, o.position.y, o.position.z]}
-            distanceFactor={0.25}
-          >
-            <div className="annotation">{o.userData.prop}</div>
-          </Html>
-        );
-      }
-    });
-
-    console.log('Caching JSX for url ' + url);
-    setCache({
-      ...cache,
-      [url]: <primitive object={scene}>{annotations}</primitive>,
-    });
-  }
-  return cache[url];
+function Rig() {
+  const { camera, mouse } = useThree();
+  const vec = new Vector3();
+  useFrame(() => {
+    vec.set(mouse.x, mouse.y, camera.position.z);
+    camera.position.lerp(vec, 0.025);
+  });
 }
 
 
 export default function App() {
-  const { model } = useControls({
-    model: {
-      value: 'hammer',
-      options: Object.keys(Models),
-    },
-  });
-
   return (
-    <>
-      <Canvas camera={{ position: [0, 0, -0.2], near: 0.025 }}>
-        <Environment files="./img/workshop_1k.hdr" background />
-        <group>
-          <Model url={Models[model]} />
-        </group>
-        <OrbitControls autoRotate />
-        <Stats />
-      </Canvas>
-      <span id="info">
-        The {model.replace(/([A-Z])/g, ' $1').toLowerCase()} is selected.
-      </span>
-    </>
+    <Canvas shadows camera={{ position: [0, 0, 8] }}>
+      <Environment preset="forest" background blur={0.07} />
+      <Center>
+      {[...Array(5).keys()].map((x) => (
+        <Button key={x} position-x={x * 2.5} />
+      ))}
+      </Center>
+      <Rig />
+    </Canvas>
   );
 }
